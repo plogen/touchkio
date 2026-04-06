@@ -46,7 +46,6 @@ module.exports = {
           owner: "plogen",
           name: "touchkio",
         },
-        draft: true,
       },
     },
   ],
