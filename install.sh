@@ -29,7 +29,7 @@ echo -e "\nDownloading the latest release..."
 TMP_DIR=$(mktemp -d)
 chmod 755 "$TMP_DIR"
 
-JSON=$(wget -qO- "https://api.github.com/repos/leukipp/touchkio/releases" | tr -d '\r\n')
+JSON=$(wget -qO- "https://api.github.com/repos/plogen/touchkio/releases" | tr -d '\r\n')
 if $ARG_EARLY; then
   DEB_REG='"prerelease":\s*(true|false).*?"browser_download_url":\s*"\K[^\"]*_'$ARCH'\.deb'
 else
