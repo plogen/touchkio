@@ -538,8 +538,10 @@ const getDisplayStatusPath = () => {
  * @returns {string|null} The display status command or null if nothing was found.
  */
 const getDisplayStatusCommand = () => {
-  // Prefer ddcutil when already used for brightness (HDMI without sysfs backlight)
-  if (HARDWARE.display.brightness.command === "ddcutil" && HARDWARE.display.status.ddcPowerMode) {
+  // Prefer DDC power mode (VCP 0xD6) over DPMS when available.
+  // This avoids "No signal" on HDMI displays where DPMS kills the link
+  // instead of putting the panel into standby.
+  if (HARDWARE.display.status.ddcPowerMode) {
     fs.writeFileSync(path.join(APP.cache, "Status.vcp"), "");
     return "ddcutil";
   }
@@ -557,12 +559,6 @@ const getDisplayStatusCommand = () => {
     if (commandExists(map.command) && map.desktops.some((d) => d === "*" || desktop.includes(d))) {
       return map.command;
     }
-  }
-
-  // Fallback to ddcutil DDC power mode (VCP 0xD6) when no DPMS tool is available
-  if (HARDWARE.display.status.ddcPowerMode) {
-    fs.writeFileSync(path.join(APP.cache, "Status.vcp"), "");
-    return "ddcutil";
   }
 
   return null;
