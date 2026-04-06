@@ -31,3 +31,22 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           yarn electron-forge publish --arch arm64,x64
+
+      - name: Publish draft release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          RELEASE_ID=$(curl -s \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/releases" \
+            | jq -r --arg tag "${{ github.ref_name }}" '.[] | select(.tag_name == $tag) | .id' | head -1)
+          if [ -n "$RELEASE_ID" ]; then
+            curl -s -X PATCH \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d '{"draft": false}' \
+              "https://api.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID"
+            echo "Release $RELEASE_ID published for tag ${{ github.ref_name }}"
+          else
+            echo "No release found for tag ${{ github.ref_name }}"
+          fi
