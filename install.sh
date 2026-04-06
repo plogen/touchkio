@@ -48,6 +48,23 @@ echo -e "\nInstalling the latest release..."
 command -v apt &> /dev/null || { echo "Package manager apt was not found."; exit 1; }
 sudo apt install -y "$DEB_PATH" || { echo "Installation of .deb file failed."; exit 1; }
 
+# Install ddcutil for DDC/CI display power control (avoids "No signal" on HDMI displays)
+echo -e "\nInstalling DDC/CI utilities..."
+
+if ! command -v ddcutil &> /dev/null; then
+  sudo apt install -y ddcutil && echo "Installed ddcutil." || echo "Warning: Failed to install ddcutil (DDC/CI display control unavailable)."
+else
+  echo "ddcutil is already installed."
+fi
+
+# Add user to i2c group for DDC/CI communication (required for ddcutil to work without full root)
+NEEDS_REBOOT=false
+if ! groups "$USER" | grep -qw "i2c"; then
+  sudo usermod -a -G i2c "$USER" && { echo "Added $USER to i2c group."; NEEDS_REBOOT=true; } || echo "Warning: Failed to add $USER to i2c group."
+else
+  echo "User $USER is already in the i2c group."
+fi
+
 # Create the systemd user service
 echo -e "\nCreating systemd user service..."
 
@@ -74,6 +91,9 @@ if $ARG_UPDATE; then
     echo "Existing $SERVICE_NAME restarted."
   else
     echo "Existing $SERVICE_NAME not running, start touchkio manually."
+  fi
+  if $NEEDS_REBOOT; then
+    echo -e "\nReboot required for i2c group membership to take effect (DDC/CI display control)."
   fi
   exit 0
 fi
@@ -110,6 +130,9 @@ else
 fi
 
 # Start the setup mode
+if $NEEDS_REBOOT; then
+  echo -e "\nReboot required for i2c group membership to take effect (DDC/CI display control)."
+fi
 read -p $'\nStart touchkio setup? (Y/n) ' setup
 
 if [[ ${setup:-y} == [Yy]* ]]; then
