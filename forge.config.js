@@ -43,7 +43,7 @@ module.exports = {
       name: "@electron-forge/publisher-github",
       config: {
         repository: {
-          owner: "leukipp",
+          owner: "plogen",
           name: "touchkio",
         },
         draft: true,
