@@ -636,10 +636,10 @@ const setDisplayStatus = (status, callback = null) => {
       execAsyncCommand("xset", ["dpms", "force", status.toLowerCase()], callback);
       break;
     case "ddcutil":
-      execAsyncCommand("sudo", ["ddcutil", "setvcp", "--noverify", "d6", status === "ON" ? "1" : "4"], (reply, error) => {
-        if (!error) {
-          fs.writeFileSync(path.join(APP.cache, "Status.vcp"), status);
-        }
+      execAsyncCommand("sudo", ["ddcutil", "setvcp", "d6", status === "ON" ? "1" : "4"], (reply, error) => {
+        // Always update the cache; ddcutil may print verification warnings to stderr
+        // (e.g. when the display enters standby) even when the command succeeds.
+        fs.writeFileSync(path.join(APP.cache, "Status.vcp"), status);
         if (typeof callback === "function") callback(reply, error);
       });
       break;
