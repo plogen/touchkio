@@ -596,6 +596,14 @@ const getDisplayStatus = () => {
       }
       break;
     case "ddcutil":
+      // Prefer the cached status to avoid querying a display that may be in
+      // standby (which causes "Display not found" errors). The cache is updated
+      // by the update loop from Status.vcp on every tick, and written
+      // immediately by setDisplayStatus(). Fall back to a live DDC query only
+      // on startup when the cache is still empty.
+      if (HARDWARE.display.status.value.status) {
+        return HARDWARE.display.status.value.status;
+      }
       const ddc = execSyncCommand("sudo", ["ddcutil", "getvcp", "d6", "--brief"]);
       if (ddc !== null) {
         const match = ddc.match(/x0([14])/);
